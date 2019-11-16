@@ -1,26 +1,18 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useState } from 'react';
+import { Pane, Text, Button } from 'evergreen-ui'
+
+import Roll from './components/Roll'
+import Stats from './components/Stats'
+
 import './App.css';
 
-function App() {
+const App = () => {
+  const [ebin, setEbin] = useState(1)
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <Pane className="App" display="flex" alignItems="stretch" flexDirection="column">
+      <Roll></Roll>
+      <Stats></Stats>
+    </Pane>
+  )
 }
-
 export default App;
