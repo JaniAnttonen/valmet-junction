@@ -2,43 +2,42 @@ package main
 
 import (
 	"encoding/csv"
+	"fmt"
 	"io"
 	"log"
-	"net"
+	"net/http"
 	"os"
+	"strconv"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
+type Msg struct {
+	Deg      int64
+	Relative float64
+	Um       float64
+}
+
 func main() {
+	http.HandleFunc("/live", wsHandler)
+	panic(http.ListenAndServe(":8080", nil))
+}
+
+func wsHandler(w http.ResponseWriter, r *http.Request) {
+	conn, err := websocket.Upgrade(w, r, w.Header(), 1024, 1024)
+	if err != nil {
+		http.Error(w, "Could not open websocket connection", http.StatusBadRequest)
+	}
+	go readFile(conn)
+}
+
+func readFile(conn *websocket.Conn) {
 	csvfile, err := os.Open("../data/shape/spiral_before.csv")
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
 	}
-
 	r := csv.NewReader(csvfile)
-
-	tcpAddr, err := net.ResolveTCPAddr(resolver, serverAddr)
-	if err != nil {
-		panic(err)
-	}
-
-	listener, err := net.ListenTCP("tcp", tcpAddr)
-	if err != nil {
-		panic(err)
-	}
-
-	// listen for an incoming connection
-	conn, err := listener.Accept()
-	if err != nil {
-		panic(err)
-	}
-
-	// receive message
-	buf := make([]byte, 512)
-	n, err := conn.Read(buf[0:])
-	if err != nil {
-		panic(err)
-	}
 
 	for {
 		record, err := r.Read()
@@ -48,11 +47,17 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		// send message
-		if _, err := conn.Write(); err != nil {
-			panic(err)
+
+		deg, err := strconv.ParseInt(record[0], 10, 32)
+		relative, err := strconv.ParseFloat(record[1], 64)
+		um, err := strconv.ParseFloat(record[2], 64)
+		m := Msg{Deg: deg, Relative: relative, Um: um}
+
+		err = conn.WriteJSON(m)
+		if err != nil {
+			fmt.Println(err)
 		}
-		println(record)
-		time.Sleep(100 * time.Millisecond)
+
+		time.Sleep(50 * time.Millisecond)
 	}
 }

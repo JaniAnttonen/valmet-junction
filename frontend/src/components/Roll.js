@@ -8,7 +8,7 @@ const Roll = ({ crossSections, sectors, data }) => {
   const { scene } = useThree()
   const [rotation, setRotation] = useState([90, 0, 20.1, 0])
 
-  const rollGeometry = new CylinderGeometry(1.2, 1.2, 3, sectors, crossSections, true)
+  const rollGeometry = new CylinderGeometry(1.2, 1.2, 7, sectors, crossSections, true)
   const rollMaterials = [
     new MeshStandardMaterial({ color: 0xcccccc }),
     new MeshStandardMaterial({ color: 0xff0000 }),
@@ -30,7 +30,7 @@ const Roll = ({ crossSections, sectors, data }) => {
   }, [])
 
   useEffect(() => {
-    console.log(rollGeometry.faces.length === crossSections * sectors * 2)
+
     data.forEach(dataPoint => {
       const faces = getFaces(dataPoint)
       faces.forEach(face => {
@@ -44,12 +44,12 @@ const Roll = ({ crossSections, sectors, data }) => {
           rollGeometry.faces[face].materialIndex = 1
         }
       })
-      console.log(faces)
+
     })
   }, [data])
 
   useFrame(() => {
-    ref.current.rotation.x = ref.current.rotation.x += 0.01
+    rollGeometry.rotateY(-0.008)
   })
 
   return rollGeometry && rollMaterials ? <mesh ref={ref}
@@ -59,10 +59,22 @@ const Roll = ({ crossSections, sectors, data }) => {
 }
 
 const RollCanvas = props => {
-  const [data, setData] = useState([{ crossSection: 0, sector: 0, variance: 0.2 }, { crossSection: 0, sector: 1, variance: 0.5 }, { crossSection: 0, sector: 2, variance: 0.1 }, { crossSection: 1, sector: 0, variance: 0.4 }, { crossSection: 1, sector: 1, variance: 0.7 }, { crossSection: 3, sector: 7, variance: 0.7 }])
+  const [data, setData] = useState([{ crossSection: 0, sector: 0, variance: 0.2 }, { crossSection: 0, sector: 1, variance: 0.5 }, { crossSection: 0, sector: 4, variance: 0.1 }, { crossSection: 0, sector: 7, variance: 0.4 }, { crossSection: 0, sector: 5, variance: 0.7 }, { crossSection: 0, sector: 6, variance: 0.7 }])
 
-  const crossSections = 4
-  const sectors = 8
+  const crossSections = 80
+  const sectors = 360
+
+  useEffect(() => {
+    const socket = new WebSocket('ws://localhost:8080/live')
+
+    socket.addEventListener('open', function (event) {
+      socket.send('Hello Server!')
+    })
+
+    socket.addEventListener('message', function (event) {
+      console.log(event.data)
+    })
+  }, [])
 
   const fetchNewData = () => {
     const crossSection = Math.floor(data.length / sectors)
