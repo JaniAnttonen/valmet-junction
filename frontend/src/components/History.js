@@ -11,7 +11,7 @@ const Performance = props => {
 
 const History = props => {
   return <Pane display="flex" background="tint" width="50%" padding={25} flexDirection="column" alignItems="flex-start">
-    <Heading size="600" marginBottom="1em">Service History</Heading>
+    <Heading size={600} marginBottom="1em">Service History</Heading>
     <Strong>Last grinding was 6 months ago</Strong>
     <Performance />
   </Pane>
