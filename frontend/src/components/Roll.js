@@ -8,7 +8,7 @@ const Roll = props => {
   const { scene } = useThree()
   useFrame(() => (ref.current.rotation.x = ref.current.rotation.x += 0.01))
 
-  const rollGeometry = new CylinderGeometry(1.2, 1.2, 7, 20);
+  const rollGeometry = new CylinderGeometry(1.2, 1.2, 7, 360);
   const rollMaterial = new MeshStandardMaterial({ color: 0xcccccc });
 
   const light = new DirectionalLight(0xffffff, 0.8);
