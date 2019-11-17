@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Pane, Icon, Text } from 'evergreen-ui'
+import { Pane, Icon, Text, Button } from 'evergreen-ui'
 
 const GrindingPriority = props => {
   const [grindState, setGrindState] = useState("notScanned")
@@ -21,7 +21,7 @@ const GrindingPriority = props => {
       bgColor = "blueTint"
   }
   return (
-    <Pane background={bgColor} display="flex" justifyContent="center" alignItems="center" border padding={8}><Icon icon={iconName} color={color} marginRight="0.2em" />{grindState === "notScanned" ? } {props.priority}</Text></Pane >
+    <Pane background={bgColor} display="flex" justifyContent="center" alignItems="center" border padding={8}><Icon icon={iconName} color={color} marginRight="0.2em" />{grindState === "notScanned" ? <><Text>This roll hasn't been scanned yet!</Text><Button onClick={() => { props.scanRoll(); setGrindState("Scanned"); }}>SCAN</Button></> : grindState === "Scanned" ? <><Text>Grinding priority: {props.priority}</Text><Button onClick={() => setGrindState("Grinding")}>GRIND</Button></> : <Button disabled>GRINDING...</Button>}</Pane >
   )
 }
 

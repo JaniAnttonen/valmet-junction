@@ -5,7 +5,13 @@ import { Pane, Text, Heading, Select, Button } from 'evergreen-ui'
 
 import OverlayMenu from './OverlayMenu'
 
-const Roll = ({ crossSections, sectors, data }) => {
+const wait = (duration) => {
+  return new Promise(resolve => {
+    setTimeout(resolve, duration)
+  })
+}
+
+const Roll = ({ crossSections, sectors, dataBuffer }) => {
   const { scene } = useThree()
   const rotation = [90, 0, 20.1, 0]
 
@@ -17,9 +23,31 @@ const Roll = ({ crossSections, sectors, data }) => {
     new MeshStandardMaterial({ color: 0x0000ff })
   ];
 
+  rollGeometry.matrixAutoUpdate = false;
+
   const getFaces = (dataPoint) => {
     const face = (dataPoint.sector * crossSections * 2) + (dataPoint.crossSection * 2)
     return [face, face + 1]
+  }
+
+  const drawMaterial = (dataPoint) => {
+    if (dataPoint) {
+      const faces = getFaces(dataPoint)
+      if (rollGeometry.faces[faces[0]] && rollGeometry.faces[faces[0]].materialIndex === 0) {
+        faces.forEach(face => {
+          if (dataPoint.variance < -0.5) {
+            rollGeometry.faces[face].materialIndex = 3
+          }
+          else if (dataPoint.variance > 0.5) {
+            rollGeometry.faces[face].materialIndex = 1
+          }
+          else {
+            rollGeometry.faces[face].materialIndex = 2
+          }
+          rollGeometry.verticesNeedUpdate = true
+        })
+      }
+    }
   }
 
   useEffect(() => {
@@ -32,24 +60,27 @@ const Roll = ({ crossSections, sectors, data }) => {
 
   useFrame(() => {
     rollGeometry.rotateY(-0.008)
-    data.forEach(dataPoint => {
-      const faces = getFaces(dataPoint)
-      if (rollGeometry.faces[faces[0]] && rollGeometry.faces[faces[0]].materialIndex === 0) {
-        console.log("HALOO")
-        faces.forEach(face => {
-          if (dataPoint.variance < -0.5) {
-            rollGeometry.faces[face].materialIndex = 3
-          }
-          else if (dataPoint.variance > 0.5) {
-            rollGeometry.faces[face].materialIndex = 1
-          }
-          else {
-            rollGeometry.faces[face].materialIndex = 2
-          }
-        })
-      }
-    })
+    //dataBuffer.length > 0 && drawMaterial(dataBuffer.shift())
   })
+
+  useEffect(() => {
+    console.log("HFJKHAJFSA")
+    dataBuffer.forEach(dataPoint => {
+      const faces = getFaces(dataPoint)
+      faces.forEach(face => {
+        if (dataPoint.variance < 0.33) {
+          rollGeometry.faces[face].materialIndex = 3
+        }
+        else if (dataPoint.variance > 0.66) {
+          rollGeometry.faces[face].materialIndex = 2
+        }
+        else {
+          rollGeometry.faces[face].materialIndex = 1
+        }
+      })
+      console.log(faces)
+    })
+  }, [dataBuffer])
 
   return rollGeometry && rollMaterials ? <mesh
     rotation={rotation}
@@ -58,25 +89,30 @@ const Roll = ({ crossSections, sectors, data }) => {
 }
 
 const RollCanvas = props => {
-  const data = []
+  const crossSections = 80
+  const sectors = 90
+  const dataBuffer = []
+  const [data, setData] = useState([])
 
-  const crossSections = 20
-  const sectors = 36
-
-  useEffect(() => {
+  const scanRoll = () => {
     const socket = new WebSocket('ws://localhost:8080/live')
     socket.addEventListener('message', function (event) {
       pushNewData(event.data)
     })
-  }, [])
+    /* [...Array(crossSections).keys()].forEach(crossSection => {
+      [...Array(sectors).keys()].forEach(sector => {
+        dataBuffer.push(`{ "crossSection": ${crossSection}, "sector": ${sector}, "variance": ${Math.random()} }`)
+      })
+    }) */
+  }
 
   const pushNewData = eventData => {
     try {
       const measurement = JSON.parse(eventData)
-      const crossSection = measurement.Relative * crossSections
+      const crossSection = Math.floor(measurement.Relative * crossSections)
       const sector = measurement.Deg
       const variance = measurement.Um
-      data.push({ crossSection: crossSection, sector: sector, variance: variance })
+      setData(data.concat({ crossSection: crossSection, sector: sector, variance: variance }))
     } catch (err) {
       console.warn(err)
     }
@@ -84,9 +120,9 @@ const RollCanvas = props => {
 
   return (
     <Pane display="flex" padding={25} height={"46vh"} background="tint2" borderRadius={0}>
-      <OverlayMenu />
+      <OverlayMenu scanRoll={() => scanRoll()} />
       <Canvas>
-        <Roll crossSections={crossSections} sectors={sectors} data={data} />
+        <Roll crossSections={crossSections} sectors={sectors} dataBuffer={data} />
       </Canvas>
     </Pane>
   )

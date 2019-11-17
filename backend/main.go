@@ -60,25 +60,11 @@ func intCalcMean(numbers []int64) int64 {
 }
 
 func readFile(conn *websocket.Conn) {
-	csvfile, err := os.Open("../data/shape/spiral_before.csv")
+	csvfile, err := os.Open("../data/shape/spiralafter_90_80.csv")
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
 	}
 	r := csv.NewReader(csvfile)
-
-	const amountOfCrossSections = 155.0
-	const targetAmountOfCrossSections = 20.0
-	const amountOfSectors = 360.0
-	const targetAmountOfSectors = 36.0
-
-	const crossSectionMultiplier = amountOfCrossSections / targetAmountOfCrossSections
-	const sectorMultiplier = amountOfSectors / targetAmountOfSectors
-
-	fmt.Println(crossSectionMultiplier, sectorMultiplier)
-
-	var degs []int64
-	var relatives []float64
-	var ums []float64
 
 	for {
 		record, err := r.Read()
@@ -93,13 +79,7 @@ func readFile(conn *websocket.Conn) {
 		relative, err := strconv.ParseFloat(record[1], 64)
 		um, err := strconv.ParseFloat(record[2], 64)
 
-		if float64(len(relatives)) > crossSectionMultiplier || deg == 0 {
-			deg = intCalcMean(degs)
-			relative = floatCalcMean(relatives)
-			um = floatCalcMean(ums)
-
-			fmt.Println(deg, relative, um)
-
+		if deg < 36 {
 			m := Msg{Deg: deg, Relative: relative, Um: um}
 
 			err = conn.WriteJSON(m)
@@ -107,15 +87,7 @@ func readFile(conn *websocket.Conn) {
 				fmt.Println(err)
 			}
 
-			degs = nil
-			relatives = nil
-			ums = nil
-
 			time.Sleep(100 * time.Millisecond)
-		} else {
-			degs = append(degs, deg)
-			relatives = append(relatives, relative)
-			ums = append(ums, um)
 		}
 	}
 }
