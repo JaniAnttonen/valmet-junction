@@ -23,8 +23,6 @@ const Roll = ({ crossSections, sectors, dataBuffer }) => {
     new MeshStandardMaterial({ color: 0x0000ff })
   ];
 
-  rollGeometry.matrixAutoUpdate = false;
-
   const getFaces = (dataPoint) => {
     const face = (dataPoint.sector * crossSections * 2) + (dataPoint.crossSection * 2)
     return [face, face + 1]
@@ -44,7 +42,6 @@ const Roll = ({ crossSections, sectors, dataBuffer }) => {
           else {
             rollGeometry.faces[face].materialIndex = 2
           }
-          rollGeometry.verticesNeedUpdate = true
         })
       }
     }
@@ -64,21 +61,21 @@ const Roll = ({ crossSections, sectors, dataBuffer }) => {
   })
 
   useEffect(() => {
-    console.log("HFJKHAJFSA")
-    dataBuffer.forEach(dataPoint => {
+    dataBuffer.length > 0 && dataBuffer.forEach(dataPoint => {
       const faces = getFaces(dataPoint)
       faces.forEach(face => {
-        if (dataPoint.variance < 0.33) {
-          rollGeometry.faces[face].materialIndex = 3
-        }
-        else if (dataPoint.variance > 0.66) {
-          rollGeometry.faces[face].materialIndex = 2
-        }
-        else {
-          rollGeometry.faces[face].materialIndex = 1
+        if (rollGeometry.faces[face]) {
+          if (dataPoint.variance < 0.33) {
+            rollGeometry.faces[face].materialIndex = 3
+          }
+          else if (dataPoint.variance > 0.66) {
+            rollGeometry.faces[face].materialIndex = 2
+          }
+          else {
+            rollGeometry.faces[face].materialIndex = 1
+          }
         }
       })
-      console.log(faces)
     })
   }, [dataBuffer])
 
@@ -94,32 +91,28 @@ const RollCanvas = props => {
   const dataBuffer = []
   const [data, setData] = useState([])
 
-  const scanRoll = () => {
-    const socket = new WebSocket('ws://localhost:8080/live')
-    socket.addEventListener('message', function (event) {
-      pushNewData(event.data)
-    })
-    /* [...Array(crossSections).keys()].forEach(crossSection => {
-      [...Array(sectors).keys()].forEach(sector => {
-        dataBuffer.push(`{ "crossSection": ${crossSection}, "sector": ${sector}, "variance": ${Math.random()} }`)
-      })
-    }) */
-  }
-
-  const pushNewData = eventData => {
-    try {
-      const measurement = JSON.parse(eventData)
-      const crossSection = Math.floor(measurement.Relative * crossSections)
-      const sector = measurement.Deg
-      const variance = measurement.Um
-      setData(data.concat({ crossSection: crossSection, sector: sector, variance: variance }))
-    } catch (err) {
-      console.warn(err)
+  useEffect(() => {
+    const pushNewData = eventData => {
+      try {
+        const measurement = JSON.parse(eventData)
+        const crossSection = Math.floor(measurement.Relative * crossSections)
+        const sector = measurement.Deg
+        const variance = measurement.Um
+        const newData = Object.assign([{ crossSection: crossSection, sector: sector, variance: variance }], data)
+        newData.push({ crossSection: crossSection, sector: sector, variance: variance })
+        setData(newData)
+      } catch (err) {
+        console.warn(err)
+      }
     }
-  }
+    const socket = new WebSocket('ws://localhost:8080/live')
+    socket.addEventListener('message', (event) =>
+      pushNewData(event.data)
+    )
+  }, [])
 
   return (
-    <Pane display="flex" padding={25} height={"46vh"} background="tint2" borderRadius={0}>
+    <Pane display="flex" padding={25} height={"46vh"} background="orange" borderRadius={0}>
       <OverlayMenu scanRoll={() => scanRoll()} />
       <Canvas>
         <Roll crossSections={crossSections} sectors={sectors} dataBuffer={data} />

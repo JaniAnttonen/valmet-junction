@@ -7,6 +7,8 @@ const Current = props => {
     <Heading marginBottom="0.5em" marginTop="1em">Rotation Speed</Heading>
     <Text>400 rpm</Text><br />
     <Text>1000 m/min</Text><br />
+    <Heading marginBottom="0.5em" marginTop="1em">Mean deviation</Heading>
+    <Text>2 um</Text><br />
   </Pane>
 }
 

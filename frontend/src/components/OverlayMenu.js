@@ -9,7 +9,7 @@ const OverlayMenu = ({ scanRoll }) => (
       <option value="bar">FOO-752189</option>
     </Select>
     </Pane>
-    <GrindingPriority scanRoll={scanRoll} />
+    <GrindingPriority scanRoll={scanRoll} priority="high" />
   </Pane>
 )
 

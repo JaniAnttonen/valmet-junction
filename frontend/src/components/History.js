@@ -6,8 +6,8 @@ const History = props => {
     <Heading size={600} marginBottom="0.5em">Service History</Heading>
     <Heading marginBottom="0.5em" marginTop="1em">Last Grind</Heading>
     <Text>6 months ago</Text>
-    <Heading marginBottom="0.5em" marginTop="1em">Paper Performance</Heading>
-    <Text>Good</Text>
+    <Heading marginBottom="0.5em" marginTop="1em">Paper Quality</Heading>
+    <Text>72%</Text>
     <Heading marginBottom="0.5em" marginTop="1em">Speed-compensated Grind</Heading>
     <Text>True</Text>
   </Pane>
